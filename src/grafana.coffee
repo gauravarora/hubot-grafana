@@ -183,6 +183,13 @@ module.exports = (robot) ->
     else
       sendRobotResponse msg, title, imageUrl, link
 
+  # Get a list of alerts
+  robot.respond /(?:grafana|graph|graf) alerts\s?(.+)?/i, (msg) ->
+    callGrafana "alerts", (alerts) ->
+      robot.logger.debug alerts
+      response = "Alerts: \n"
+      sendAlertsList alerts, response, msg
+
   # Get a list of available dashboards
   robot.respond /(?:grafana|graph|graf) list\s?(.+)?/i, (msg) ->
     if msg.match[1]
@@ -205,6 +212,18 @@ module.exports = (robot) ->
       robot.logger.debug dashboards
       response = "Dashboards matching `#{query}`:\n"
       sendDashboardList dashboards, response, msg
+
+  # Send Alerts list
+  sendAlertsList = (alerts, response, msg) -> 
+    robot.logger.debug alerts
+    unless alerts.length > 0
+      return
+    
+    for alert in alerts
+      response = response + "#{alert.name} [#{alert.state}] (#{grafana_host}/dashboard/#{alert.dashboardUri}?panelId=#{alert.panelId}&fullscreen&edit&tab=alert)\n"
+
+    response.trim()
+    msg.send response
 
   # Send Dashboard list
   sendDashboardList = (dashboards, response, msg) ->

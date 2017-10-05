@@ -42,6 +42,20 @@ describe 'grafana', ->
 
     it 'registers a search listener', ->
       expect(@robot.respond).to.have.been.calledWith(/(?:grafana|graph|graf) search (.+)/i)
+  
+  context 'ask hubot to list alerts', ->
+    beforeEach (done) ->
+      nock('http://play.grafana.org')
+        .get('/api/alerts')
+        .replyWithFile(200, __dirname + '/fixtures/alerts.json')
+      room.user.say 'alice', 'hubot graf alerts'
+      setTimeout done, 100
+    
+    it 'hubot should response with a list of alerts', ->
+      expect(room.messages).to.eql [
+        [ 'alice', 'hubot graf alerts' ]
+        [ 'hubot', "Alerts: \nAccess bank codes alert [ok] (http://play.grafana.org/dashboard/db/pg-banks?panelId=7&fullscreen&edit&tab=alert)\nAggregator alert [ok] (http://play.grafana.org/dashboard/db/traffic-by-instance?panelId=4&fullscreen&edit&tab=alert)\nairtel alert [ok] (http://play.grafana.org/dashboard/db/zoto-operators?panelId=13&fullscreen&edit&tab=alert)\n"] 
+      ]
 
   context 'ask hubot to list dashboards', ->
     beforeEach (done) ->
